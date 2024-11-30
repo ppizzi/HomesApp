@@ -53,6 +53,24 @@ class ApplianceManager:
             st.error(f"An appliance named '{name}' already exists in this house.")
             return None
 
+def add_house_page(manager):
+    st.header("Add New House")
+    house_name = st.text_input("House Name")
+    house_address = st.text_input("House Address")
+    
+    if st.button("Add House"):
+        if house_name:
+            try:
+                cursor = manager.conn.cursor()
+                cursor.execute("INSERT INTO houses (name, address) VALUES (?, ?)", 
+                               (house_name, house_address))
+                manager.conn.commit()
+                st.success(f"House '{house_name}' added successfully!")
+            except sqlite3.IntegrityError:
+                st.error(f"A house named '{house_name}' already exists.")
+        else:
+            st.warning("Please enter a house name.")
+
 def add_appliance_page(manager):
     st.header("Add New Appliance")
     
@@ -89,7 +107,66 @@ def add_appliance_page(manager):
             else:
                 st.warning("Appliance Name is required.")
 
-# Rest of the code remains the same as in the previous implementation
+def view_appliances_page(manager):
+    st.header("View Appliances")
+    
+    # Get list of houses
+    houses = manager.get_houses()
+    if not houses:
+        st.warning("Please add a house first.")
+        return
+
+    # Create house selection dropdown
+    house_options = {name: id for id, name in houses}
+    selected_house_name = st.selectbox("Select House", list(house_options.keys()))
+    selected_house_id = house_options[selected_house_name]
+
+    # Get appliances for selected house
+    appliances = manager.get_appliances_by_house(selected_house_id)
+    
+    if not appliances:
+        st.warning("No appliances found for this house.")
+        return
+
+    # Create a radio button for appliance selection
+    appliance_options = {name: (id, description) for id, name, description in appliances}
+    selected_appliance_name = st.radio("Select Appliance", list(appliance_options.keys()))
+    
+    # Get details of selected appliance
+    selected_appliance_id, selected_appliance_description = appliance_options[selected_appliance_name]
+
+    # Display appliance description
+    if selected_appliance_description:
+        st.write("Description:", selected_appliance_description)
+
+    # Manage button
+    if st.button("Manage Appliance"):
+        # Store selected appliance in session state for use in manage page
+        st.session_state.selected_appliance = {
+            'id': selected_appliance_id,
+            'name': selected_appliance_name,
+            'house_id': selected_house_id,
+            'house_name': selected_house_name
+        }
+        # Switch to Manage Appliance page
+        st.session_state.page = 'Manage Appliance'
+        st.experimental_rerun()
+
+def manage_appliance_page(manager):
+    st.header("Manage Appliance")
+    
+    # Check if an appliance is selected
+    if 'selected_appliance' not in st.session_state:
+        st.warning("Please select an appliance first.")
+        return
+
+    appliance = st.session_state.selected_appliance
+    st.write(f"Managing Appliance: **{appliance['name']}**")
+    st.write(f"In House: **{appliance['house_name']}**")
+
+    # Placeholder for future functionality
+    st.write("Appliance management features coming soon...")
+
 def main():
     # Initialize session state for page navigation
     if 'page' not in st.session_state:
