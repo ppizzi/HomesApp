@@ -176,7 +176,7 @@ def main():
     # Sidebar navigation
     st.sidebar.title("Navigation")
     pages = ["Add House", "Add Appliance", "View Appliances", "Manage Appliance"]
-    query_params = st.experimental_get_query_params()
+    query_params = st.get_query_params()
     if 'page' in query_params:
         selected_page = query_params['page'][0]
     else:
