@@ -148,10 +148,8 @@ def view_appliances_page(manager):
             'house_id': selected_house_id,
             'house_name': selected_house_name
         }
-        # Switch to Manage Appliance page
-        st.session_state.page = 'Manage Appliance'
-        st.experimental_rerun()
-
+        # Navigate to Manage Appliance page
+        st.experimental_set_query_params(page="Manage Appliance")
 def manage_appliance_page(manager):
     st.header("Manage Appliance")
     
@@ -178,7 +176,11 @@ def main():
     # Sidebar navigation
     st.sidebar.title("Navigation")
     pages = ["Add House", "Add Appliance", "View Appliances", "Manage Appliance"]
-    selected_page = st.sidebar.radio("Go to", pages, index=pages.index(st.session_state.page))
+    query_params = st.experimental_get_query_params()
+    if 'page' in query_params:
+        selected_page = query_params['page'][0]
+    else:
+        selected_page = st.sidebar.radio("Go to", pages, index=pages.index(st.session_state.page))
     
     # Page routing
     if selected_page == "Add House":
@@ -192,6 +194,6 @@ def main():
 
     # Update session state
     st.session_state.page = selected_page
-
-if __name__ == "__main__":
+    
+    if __name__ == "__main__":
     main()
